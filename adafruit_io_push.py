@@ -1,12 +1,10 @@
 from Adafruit_IO import Client, Feed, RequestError
 
-# Use your provided credentials
 ADAFRUIT_IO_USERNAME = "varshinicb99"
-ADAFRUIT_IO_KEY = "aio_batV15elzJ6knI6nnfHjJ0Mlfe1w"
+ADAFRUIT_IO_KEY = "aio_dAoB13F0U7Z6wZfP98P6N9zcn8RY"
 
 aio = Client(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY)
 
-# Ensure feeds exist (create if missing)
 for feed_name in ["temperature", "humidity", "gas", "anomaly"]:
     try:
         aio.feeds(feed_name)
