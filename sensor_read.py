@@ -30,9 +30,6 @@ def get_bangalore_weather():
     except Exception:
         return 25.123456, 56.789012
 
-def get_mock_data():
-    return 25.123456, 56.789012, 350.987654
-
 def get_sensor_data():
     temp, hum = read_dht11()
     gas = read_mq135()
