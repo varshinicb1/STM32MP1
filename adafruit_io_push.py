@@ -2,7 +2,7 @@ from Adafruit_IO import Client, Feed, RequestError
 
 # Use your provided credentials
 ADAFRUIT_IO_USERNAME = "varshinicb99"
-ADAFRUIT_IO_KEY = "aio_XXYH15mddEj83HFOTw6UZuue7zEF"
+ADAFRUIT_IO_KEY = "aio_batV15elzJ6knI6nnfHjJ0Mlfe1w"
 
 aio = Client(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY)
 
