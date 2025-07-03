@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
+import gi
 import os
-import pygame
 import time
+import threading
 
-# === Sensor Functions ===
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib
+
 def read_dht11():
     try:
         os.system("echo 225 > /sys/class/gpio/export")
         os.system("echo in > /sys/class/gpio/gpio225/direction")
         value = os.popen("cat /sys/class/gpio/gpio225/value").read().strip()
-        temperature = int(value) * 10  # simulate
-        humidity = 50  # simulate
+        temperature = int(value) * 10
+        humidity = 55
         return temperature, humidity
     except:
         return 0, 0
@@ -25,56 +28,48 @@ def read_mq135():
 def detect_anomaly(temp, gas):
     return temp > 35 or gas > 1000
 
-# === GUI Setup ===
-pygame.init()
-screen = pygame.display.set_mode((480, 320), pygame.FULLSCREEN)
-pygame.display.set_caption("STM32MP1 ENV Dashboard")
+class Dashboard(Gtk.Window):
+    def __init__(self):
+        Gtk.Window.__init__(self, title="STM32MP1 Environment Monitor")
+        self.set_default_size(480, 320)
+        self.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 0, 0, 1))
 
-font_big = pygame.font.SysFont("Consolas", 36, bold=True)
-font_small = pygame.font.SysFont("Consolas", 24)
+        self.grid = Gtk.Grid(column_spacing=10, row_spacing=10, margin=20)
+        self.add(self.grid)
 
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-CYAN = (0, 255, 255)
-RED = (255, 50, 50)
-GREEN = (0, 255, 0)
+        self.label_temp = Gtk.Label(label="TEMP: -- °C")
+        self.label_hum = Gtk.Label(label="HUMIDITY: -- %")
+        self.label_gas = Gtk.Label(label="GAS: --")
+        self.label_status = Gtk.Label(label="STATUS: Waiting...")
 
-def draw_text(text, x, y, color, font):
-    rendered = font.render(text, True, color)
-    screen.blit(rendered, (x, y))
+        for label in [self.label_temp, self.label_hum, self.label_gas, self.label_status]:
+            label.override_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 1, 1, 1))
+            label.set_name("data-label")
+            label.set_margin_top(10)
+            self.grid.attach(label, 0, len(self.grid.get_children()), 1, 1)
 
-def draw_dashboard(temp, hum, gas, anomaly):
-    screen.fill(BLACK)
-    draw_text("STM32MP1 ENV MONITOR", 40, 10, CYAN, font_small)
-    draw_text(f"TEMP:     {temp} °C", 60, 70, WHITE, font_big)
-    draw_text(f"HUMIDITY: {hum} %", 60, 130, WHITE, font_big)
-    draw_text(f"GAS:      {gas}", 60, 190, WHITE, font_big)
+        self.update_thread = threading.Thread(target=self.update_loop)
+        self.update_thread.daemon = True
+        self.update_thread.start()
 
-    if anomaly:
-        draw_text("⚠ ANOMALY DETECTED!", 40, 250, RED, font_big)
-    else:
-        draw_text("✔ STATUS: NORMAL", 60, 250, GREEN, font_big)
+    def update_loop(self):
+        while True:
+            temp, hum = read_dht11()
+            gas = read_mq135()
+            anomaly = detect_anomaly(temp, gas)
 
-    pygame.display.flip()
+            GLib.idle_add(self.label_temp.set_text, f"TEMP: {temp} °C")
+            GLib.idle_add(self.label_hum.set_text, f"HUMIDITY: {hum} %")
+            GLib.idle_add(self.label_gas.set_text, f"GAS: {gas}")
+            GLib.idle_add(
+                self.label_status.set_text,
+                "⚠ ANOMALY DETECTED!" if anomaly else "✔ STATUS: NORMAL"
+            )
+            time.sleep(3)
 
-# === Main Loop ===
-last_update = 0
-running = True
-while running:
-    now = time.time()
-    if now - last_update > 2:
-        temp, hum = read_dht11()
-        gas = read_mq135()
-        anomaly = detect_anomaly(temp, gas)
-        draw_dashboard(temp, hum, gas, anomaly)
-        last_update = now
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.KEYDOWN:
-            running = False
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            running = False  # touch to exit
-
-pygame.quit()
+if __name__ == "__main__":
+    from gi.repository import Gdk
+    win = Dashboard()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
