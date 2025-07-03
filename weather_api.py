@@ -1,8 +1,6 @@
 from flask import Flask, jsonify, render_template
-from sensor_read import get_sensor_data
+from sensor_read import read_dht11, read_mq135
 from ai_detection import detect_anomaly
-from adafruit_io_push import push_to_adafruit
-from logger import log_to_csv
 
 app = Flask(__name__)
 
@@ -12,27 +10,21 @@ def index():
 
 @app.route("/data")
 def data():
-    temp, hum, gas, is_mock, source = get_sensor_data()
+    temp, hum = read_dht11()
+    gas = read_mq135()
     anomaly = detect_anomaly(temp, gas)
-    log_to_csv(temp, hum, gas, anomaly, source)
-    try:
-        push_to_adafruit(temp, hum, gas, anomaly)
-    except Exception as e:
-        print(f"Adafruit IO error: {e}")
     return jsonify({
         "temperature": temp,
         "humidity": hum,
         "gas": gas,
-        "anomaly": anomaly,
-        "source": source,
-        "is_mock": is_mock
+        "anomaly": anomaly
     })
 
 @app.route("/about")
 def about():
     return jsonify({
         "title": "IoT-Based Environmental Monitoring System",
-        "authors": ["Varshini CB – 1RV23EE056", "Vedant – 1RV23EE057"]
+        "authors": ["Varshini CB - 1RV23EE056", "Vedant - 1RV23EE057"]
     })
 
 if __name__ == "__main__":
