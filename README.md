@@ -1,14 +1,12 @@
-# Innovative Lab Experiment
-## IoT-Based Environmental Monitoring System: Design, Implementation, and Innovation
-**Dynamic Anomaly Detection using AI with Adaptive Sensing and Localized Alerts**
+# STM32MP1 Sci-Fi IoT Dashboard
 
-### 👩‍💻 Authors
-- Varshini CB – 1RV23EE056
-- Vedant – 1RV23EE057
+## Features
+- Sci-fi animated, mobile-friendly UI
+- Robust fallback: never fails, always shows data
+- Uses STM32MP1 sensors, Bangalore weather API, or high-precision mock data
+- Adafruit IO integration
+- CSV logging with data source
+- One-command launch: `python3 weather_api.py`
 
-### 🔧 Sensors Used
-- DHT11 (Temperature & Humidity)
-- MQ135 (Air Quality / Gas)
-
-### 📦 How to Run
+## How to Run
 
