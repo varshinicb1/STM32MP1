@@ -15,7 +15,10 @@ def data():
     temp, hum, gas, is_mock, source = get_sensor_data()
     anomaly = detect_anomaly(temp, gas)
     log_to_csv(temp, hum, gas, anomaly, source)
-    push_to_adafruit(temp, hum, gas, anomaly)
+    try:
+        push_to_adafruit(temp, hum, gas, anomaly)
+    except Exception as e:
+        print(f"Adafruit IO error: {e}")
     return jsonify({
         "temperature": temp,
         "humidity": hum,
