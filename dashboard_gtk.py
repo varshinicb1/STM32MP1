@@ -1,63 +1,143 @@
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GLib
-import threading
-import time
+import threading, time, sys
+
 from sensor_read import get_sensor_data
 from ai_detection import detect_anomaly
 from adafruit_io_push import push_to_adafruit
 from logger import log_to_csv
 
-class SciFiDashboard(Gtk.Window):
-    def __init__(self):
-        Gtk.Window.__init__(self, title="STM32MP1 Sci-Fi Dashboard")
-        self.set_default_size(480, 320)
-        self.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0.07, 0.13, 0.2, 1))
-        self.set_border_width(20)
+APP_TITLE = "IoT-Based Environmental Monitoring System: Design, Implementation, and Innovation"
+AUTHORS = "By: Varshini CB (1RV23EE056), Vedant (1RV23EE057)"
 
-        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15)
-        self.add(vbox)
+class DashboardPage(Gtk.Box):
+    def __init__(self, parent):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        self.set_name("sci-fi-bg")
+        self.parent = parent
 
-        self.title = Gtk.Label(label="🛰️  ENVIRONMENTAL STATUS")
-        self.title.override_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 1, 1, 1))
+        self.title = Gtk.Label(label=APP_TITLE)
         self.title.set_name("sci-fi-title")
-        vbox.pack_start(self.title, False, False, 0)
+        self.pack_start(self.title, False, False, 0)
 
         self.temp_label = Gtk.Label(label="Temperature: -- °C")
         self.hum_label = Gtk.Label(label="Humidity: -- %")
         self.gas_label = Gtk.Label(label="Gas Level: --")
-        self.source_label = Gtk.Label(label="Source: --")
         self.status_label = Gtk.Label(label="Status: --")
-        for lbl in [self.temp_label, self.hum_label, self.gas_label, self.source_label, self.status_label]:
+        self.source_label = Gtk.Label(label="Source: --")
+        for lbl in [self.temp_label, self.hum_label, self.gas_label, self.status_label, self.source_label]:
             lbl.set_name("sci-fi-value")
-            vbox.pack_start(lbl, False, False, 0)
+            self.pack_start(lbl, False, False, 0)
 
-        self.footer = Gtk.Label(label="Varshini CB – 1RV23EE056 | Vedant – 1RV23EE057 | Bangalore, India")
-        self.footer.set_name("sci-fi-footer")
-        vbox.pack_end(self.footer, False, False, 0)
+        self.switch_btn = Gtk.Button(label="Go to Sensors Page")
+        self.switch_btn.connect("clicked", lambda w: parent.show_page("sensors"))
+        self.pack_start(self.switch_btn, False, False, 0)
 
+        self.about_btn = Gtk.Button(label="About")
+        self.about_btn.connect("clicked", lambda w: parent.show_page("about"))
+        self.pack_start(self.about_btn, False, False, 0)
+
+    def update(self, temp, hum, gas, anomaly, source):
+        self.temp_label.set_text(f"Temperature: {temp:.6f} °C")
+        self.hum_label.set_text(f"Humidity: {hum:.6f} %")
+        self.gas_label.set_text(f"Gas Level: {gas:.6f}")
+        self.source_label.set_text(f"Source: {source}")
+        if anomaly:
+            self.status_label.set_markup('<span foreground="#ff1744" weight="bold">⚠ Anomaly Detected!</span>')
+        else:
+            self.status_label.set_markup('<span foreground="#00ff6a" weight="bold">Normal</span>')
+
+class SensorsPage(Gtk.Box):
+    def __init__(self, parent):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        self.set_name("sci-fi-bg")
+        self.parent = parent
+
+        self.label = Gtk.Label(label="Real-Time Sensor Data")
+        self.label.set_name("sci-fi-title")
+        self.pack_start(self.label, False, False, 0)
+
+        self.temp = Gtk.Label(label="Temperature: -- °C")
+        self.hum = Gtk.Label(label="Humidity: -- %")
+        self.gas = Gtk.Label(label="Gas: --")
+        for lbl in [self.temp, self.hum, self.gas]:
+            lbl.set_name("sci-fi-value")
+            self.pack_start(lbl, False, False, 0)
+
+        self.back_btn = Gtk.Button(label="Back to Dashboard")
+        self.back_btn.connect("clicked", lambda w: parent.show_page("dashboard"))
+        self.pack_start(self.back_btn, False, False, 0)
+
+    def update(self, temp, hum, gas):
+        self.temp.set_text(f"Temperature: {temp:.6f} °C")
+        self.hum.set_text(f"Humidity: {hum:.6f} %")
+        self.gas.set_text(f"Gas: {gas:.6f}")
+
+class AboutPage(Gtk.Box):
+    def __init__(self, parent):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        self.set_name("sci-fi-bg")
+        self.parent = parent
+
+        self.title = Gtk.Label(label=APP_TITLE)
+        self.title.set_name("sci-fi-title")
+        self.pack_start(self.title, False, False, 0)
+
+        self.authors = Gtk.Label(label=AUTHORS)
+        self.authors.set_name("sci-fi-value")
+        self.pack_start(self.authors, False, False, 0)
+
+        self.desc = Gtk.Label(label="Dynamic Anomaly Detection using AI with Adaptive Sensing and Localized Alerts.\n\nThis dashboard is interactive, full-screen, and robust to sensor/API failures.")
+        self.desc.set_line_wrap(True)
+        self.desc.set_name("sci-fi-value")
+        self.pack_start(self.desc, False, False, 0)
+
+        self.back_btn = Gtk.Button(label="Back to Dashboard")
+        self.back_btn.connect("clicked", lambda w: parent.show_page("dashboard"))
+        self.pack_start(self.back_btn, False, False, 0)
+
+class SciFiApp(Gtk.Window):
+    def __init__(self):
+        Gtk.Window.__init__(self, title=APP_TITLE)
+        self.set_default_size(800, 480)
+        self.fullscreen()
+        self.connect("key-press-event", self.on_key_press)
+        self.set_border_width(0)
+        self.set_name("sci-fi-bg")
+
+        self.stack = Gtk.Stack()
+        self.add(self.stack)
+
+        self.pages = {
+            "dashboard": DashboardPage(self),
+            "sensors": SensorsPage(self),
+            "about": AboutPage(self)
+        }
+        for name, page in self.pages.items():
+            self.stack.add_named(page, name)
+        self.show_page("dashboard")
         self.apply_css()
-        self.update_data()
         self.start_periodic_update()
+
+    def show_page(self, name):
+        self.stack.set_visible_child_name(name)
 
     def apply_css(self):
         css = b"""
+        #sci-fi-bg {
+            background: #0f2027;
+        }
         #sci-fi-title {
             font-size: 28px;
             color: #00ffe7;
-            text-shadow: 0 0 10px #00ffe7, 0 0 20px #00ffe7;
             letter-spacing: 2px;
         }
         #sci-fi-value {
-            font-size: 22px;
+            font-size: 20px;
             color: #fff;
             font-family: 'Orbitron', monospace;
             margin: 8px;
-        }
-        #sci-fi-footer {
-            font-size: 14px;
-            color: #00ffe7;
-            opacity: 0.8;
         }
         """
         style_provider = Gtk.CssProvider()
@@ -68,7 +148,7 @@ class SciFiDashboard(Gtk.Window):
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
 
-    def update_data(self):
+    def update_all(self):
         temp, hum, gas, is_mock, source = get_sensor_data()
         anomaly = detect_anomaly(temp, gas)
         log_to_csv(temp, hum, gas, anomaly, source)
@@ -76,27 +156,25 @@ class SciFiDashboard(Gtk.Window):
             push_to_adafruit(temp, hum, gas, anomaly)
         except Exception as e:
             print(f"Adafruit IO error: {e}")
-
-        self.temp_label.set_text(f"Temperature: {temp:.6f} °C")
-        self.hum_label.set_text(f"Humidity: {hum:.6f} %")
-        self.gas_label.set_text(f"Gas Level: {gas:.6f}")
-        self.source_label.set_text(f"Source: {'STM32MP1 Sensors' if source == 'sensor' else ('Bangalore Weather API' if source == 'weather_api' else 'Mock Data')}")
-        if anomaly:
-            self.status_label.set_markup('<span foreground="#ff1744" weight="bold">⚠ Anomaly Detected!</span>')
-        else:
-            self.status_label.set_markup('<span foreground="#00ff6a" weight="bold">Normal</span>')
+        self.pages["dashboard"].update(temp, hum, gas, anomaly, source)
+        self.pages["sensors"].update(temp, hum, gas)
 
     def periodic_update(self):
         while True:
-            GLib.idle_add(self.update_data)
+            GLib.idle_add(self.update_all)
             time.sleep(2)
 
     def start_periodic_update(self):
         t = threading.Thread(target=self.periodic_update, daemon=True)
         t.start()
 
+    def on_key_press(self, widget, event):
+        # ESC to exit full screen and close
+        if event.keyval == Gdk.KEY_Escape:
+            Gtk.main_quit()
+
 if __name__ == "__main__":
-    win = SciFiDashboard()
+    win = SciFiApp()
     win.connect("destroy", Gtk.main_quit)
     win.show_all()
     Gtk.main()
