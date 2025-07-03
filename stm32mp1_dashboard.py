@@ -3,53 +3,72 @@ import gi, random, threading, time
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GLib
 
-class Dashboard(Gtk.Window):
+class WeatherStation(Gtk.Window):
     def __init__(self):
-        Gtk.Window.__init__(self, title="STM32MP1 Sci-Fi Monitor")
-        self.set_default_size(480, 320)
+        Gtk.Window.__init__(self, title="STM32MP1 Weather Station")
+        self.set_default_size(800, 480)
         self.fullscreen()
-        self.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 0, 0, 1))
+        self.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0.05, 0.05, 0.05, 1))
 
-        grid = Gtk.Grid(column_spacing=20, row_spacing=20, margin=30)
-        self.add(grid)
+        self.grid = Gtk.Grid(column_spacing=30, row_spacing=20, margin_top=30, margin_bottom=30, margin_start=30, margin_end=30)
+        self.grid.set_column_homogeneous(True)
+        self.grid.set_row_homogeneous(False)
+        self.add(self.grid)
 
-        self.temp = Gtk.Label(label="TEMP: -- °C")
-        self.hum  = Gtk.Label(label="HUMIDITY: -- %")
-        self.gas  = Gtk.Label(label="GAS: -- ppm")
-        self.status = Gtk.Label(label="STATUS: Waiting...")
+        # Section Title
+        self.title = self.make_label("🌦 STM32MP1 ENVIRONMENT MONITOR", 28, (0, 1, 1))
+        self.grid.attach(self.title, 0, 0, 2, 1)
 
-        for label in [self.temp, self.hum, self.gas, self.status]:
-            label.override_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 1, 1, 1))
-            label.set_name("label")
-            label.set_xalign(0)
-            label.set_margin_bottom(10)
-            grid.attach(label, 0, grid.get_children().__len__(), 1, 1)
+        # Sensor data widgets
+        self.temp = self.make_label("🌡 Temperature: -- °C", 24)
+        self.hum = self.make_label("💧 Humidity: -- %", 24)
+        self.gas = self.make_label("🧪 Air Quality (MQ135): -- ppm", 24)
+        self.pres = self.make_label("🔽 Pressure: -- hPa", 24)
+        self.status = self.make_label("✔ System Status: Initializing...", 26, (1, 1, 0))
+
+        labels = [self.temp, self.hum, self.gas, self.pres, self.status]
+        for i, lbl in enumerate(labels):
+            self.grid.attach(lbl, 0, i + 1, 2, 1)
 
         # Exit button
-        btn = Gtk.Button(label="Exit")
-        btn.connect("clicked", Gtk.main_quit)
-        grid.attach(btn, 0, 4, 1, 1)
+        exit_btn = Gtk.Button(label="❌ Exit")
+        exit_btn.connect("clicked", Gtk.main_quit)
+        self.grid.attach(exit_btn, 0, 7, 2, 1)
 
-        threading.Thread(target=self.update_loop, daemon=True).start()
+        # Start data simulation
+        self.updater = threading.Thread(target=self.update_loop)
+        self.updater.daemon = True
+        self.updater.start()
+
+    def make_label(self, text, size=20, rgb=(1, 1, 1)):
+        lbl = Gtk.Label(label=text)
+        lbl.override_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(*rgb, 1))
+        lbl.set_xalign(0.0)
+        lbl.set_margin_bottom(5)
+        lbl.set_markup(f"<span font='Monospace {size}'>{text}</span>")
+        return lbl
 
     def update_loop(self):
         while True:
-            t = random.randint(25, 40)
-            h = random.randint(40, 80)
-            g = random.randint(300, 1200)
-            a = t > 35 or g > 1000
+            temp = round(random.uniform(20.0, 45.0), 1)
+            hum = random.randint(35, 90)
+            gas = random.randint(300, 1200)
+            pres = round(random.uniform(980, 1025), 1)
 
-            GLib.idle_add(self.temp.set_text, f"TEMP: {t} °C")
-            GLib.idle_add(self.hum.set_text,  f"HUMIDITY: {h} %")
-            GLib.idle_add(self.gas.set_text,  f"GAS: {g} ppm")
-            GLib.idle_add(self.status.set_text,
-                          "⚠ ANOMALY DETECTED!" if a else "✔ NORMAL")
+            status = "⚠ ALERT: Poor Air Quality" if gas > 1000 or temp > 40 else "✔ System Stable"
+
+            # Update GUI
+            GLib.idle_add(self.temp.set_markup, f"<span font='Monospace 24'>🌡 Temperature: {temp} °C</span>")
+            GLib.idle_add(self.hum.set_markup, f"<span font='Monospace 24'>💧 Humidity: {hum} %</span>")
+            GLib.idle_add(self.gas.set_markup, f"<span font='Monospace 24'>🧪 Air Quality (MQ135): {gas} ppm</span>")
+            GLib.idle_add(self.pres.set_markup, f"<span font='Monospace 24'>🔽 Pressure: {pres} hPa</span>")
+            GLib.idle_add(self.status.set_markup, f"<span font='Monospace 26'>{status}</span>")
             GLib.idle_add(self.status.override_color, Gtk.StateFlags.NORMAL,
-                          Gdk.RGBA(1, 0, 0, 1) if a else Gdk.RGBA(0, 1, 0, 1))
+                          Gdk.RGBA(1, 0, 0, 1) if "ALERT" in status else Gdk.RGBA(0, 1, 0, 1))
             time.sleep(2)
 
 if __name__ == "__main__":
-    win = Dashboard()
+    win = WeatherStation()
     win.connect("destroy", Gtk.main_quit)
     win.show_all()
     Gtk.main()
