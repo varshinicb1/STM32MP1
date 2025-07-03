@@ -1,5 +1,3 @@
 flask
-adafruit-circuitpython-dht
 adafruit-io
-tflite-runtime
-numpy
+requests
