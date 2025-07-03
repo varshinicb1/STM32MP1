@@ -2,7 +2,7 @@ import adafruit_dht
 import board
 
 def read_dht11(pin=None):
-    # Use board.D4 for GPIO4, adjust as needed for your wiring
+    # Use board.D4 for GPIO4; adjust as needed for your wiring
     dht_device = adafruit_dht.DHT11(board.D4)
     try:
         temperature = dht_device.temperature
