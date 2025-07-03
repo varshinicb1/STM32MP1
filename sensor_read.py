@@ -1,9 +1,7 @@
 import requests
 
 def read_dht11():
-    # Placeholder: DHT11 protocol not implemented for STM32MP1 GPIO in Python
-    # Always fail to trigger fallback
-    return None, None
+    return None, None  # Placeholder: always triggers fallback
 
 def read_mq135():
     try:
