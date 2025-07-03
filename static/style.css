@@ -1,0 +1,5 @@
+body{font-family:Segoe UI,sans-serif;background:
+linear-gradient(#e0f7fa,#fff);display:flex;justify-content:center;padding-top:5%}
+.card{background:#fff;padding:2em;border-radius:1em;box-shadow:0 0 20px
+rgba(0,0,0,.1);width:300px;text-align:center}.alert{color:red;font-weight:bold}
+.safe{color:green}footer{font-size:.8em;margin-top:1em;color:#777}

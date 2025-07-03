@@ -1,0 +1,10 @@
+[Unit]
+Description=Flask API
+After=network.target
+[Service]
+ExecStart=/usr/bin/python3 /root/STM32MP1/weather_api.py
+WorkingDirectory=/root/STM32MP1
+Restart=always
+User=root
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,16 @@
+<!DOCTYPE html><html><head>
+<title>IoT Dashboard</title><link rel="stylesheet" href="/static/style.css">
+</head><body><div class="card"><h1>Environmental Dashboard</h1>
+<p><strong>Temperature:</strong> <span id="temp">--</span> °C</p>
+<p><strong>Humidity:</strong> <span id="hum">--</span> %</p>
+<p><strong>Gas Level:</strong> <span id="gas">--</span></p>
+<p id="anomaly" class="safe">Status: Normal</p>
+<footer>Varshini CB – 1RV23EE056 | Vedant – 1RV23EE057</footer></div>
+<script>function update(){fetch("/data").then(r=>r.json()).then(d=>{
+document.getElementById("temp").innerText=d.temperature;
+document.getElementById("hum").innerText =d.humidity;
+document.getElementById("gas").innerText =d.gas;
+document.getElementById("anomaly").innerText=
+d.anomaly?"⚠ Anomaly Detected!":"Status: Normal";
+document.getElementById("anomaly").className=d.anomaly?"alert":"safe";});}
+setInterval(update,2000);update();</script></body></html>
