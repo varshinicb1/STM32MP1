@@ -1,24 +1,90 @@
 body {
-  font-family: Segoe UI, sans-serif;
-  background: linear-gradient(#e0f7fa,#fff);
-  color: #333;
+  background: radial-gradient(ellipse at center, #0f2027 0%, #2c5364 100%);
+  min-height: 100vh;
+  margin: 0;
+  font-family: 'Orbitron', 'Segoe UI', monospace, sans-serif;
+  color: #fff;
   display: flex;
   justify-content: center;
-  padding-top: 5%;
-  margin: 0;
+  align-items: center;
 }
-.card {
-  background: #fff;
-  padding: 2em;
-  border-radius: 1em;
-  box-shadow: 0 0 20px rgba(0,0,0,.1);
-  width: 90vw;
-  max-width: 350px;
+.neon-container {
+  background: rgba(20, 30, 40, 0.95);
+  border-radius: 1.5em;
+  box-shadow: 0 0 40px #00ffe7, 0 0 10px #00ffe7 inset;
+  padding: 2em 2.5em;
+  max-width: 400px;
+  width: 95vw;
   text-align: center;
+  animation: flicker 2s infinite alternate;
 }
-.alert { color: red; font-weight: bold; }
-.safe  { color: green; }
-footer { font-size: .8em; margin-top: 1em; color: #777; }
+@keyframes flicker {
+  0% { box-shadow: 0 0 40px #00ffe7, 0 0 10px #00ffe7 inset; }
+  100% { box-shadow: 0 0 60px #00ffe7, 0 0 20px #00ffe7 inset; }
+}
+.neon-title {
+  font-size: 1.5em;
+  color: #00ffe7;
+  text-shadow: 0 0 10px #00ffe7, 0 0 20px #00ffe7;
+  margin-bottom: 1.2em;
+  letter-spacing: 2px;
+}
+.neon-panel {
+  background: rgba(10, 20, 30, 0.8);
+  border-radius: 1em;
+  box-shadow: 0 0 20px #00ffe7 inset;
+  padding: 1.5em 1em;
+  margin-bottom: 1.5em;
+}
+.neon-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.7em 0;
+  font-size: 1.1em;
+}
+.label {
+  color: #00ffe7;
+  text-shadow: 0 0 5px #00ffe7;
+  font-weight: bold;
+  flex: 1;
+  text-align: left;
+}
+.value {
+  color: #fff;
+  font-family: 'Orbitron', monospace;
+  font-size: 1.1em;
+  flex: 1;
+  text-align: right;
+}
+.unit {
+  color: #00ffe7;
+  margin-left: 0.2em;
+  font-size: 0.9em;
+}
+.alert {
+  color: #ff1744;
+  text-shadow: 0 0 8px #ff1744;
+  font-weight: bold;
+}
+.safe {
+  color: #00ff6a;
+  text-shadow: 0 0 8px #00ff6a;
+  font-weight: bold;
+}
+footer {
+  margin-top: 1.5em;
+  font-size: 0.9em;
+  color: #00ffe7;
+  display: flex;
+  justify-content: space-between;
+  opacity: 0.8;
+}
+.footer-right {
+  text-align: right;
+}
 @media (max-width: 500px) {
-  .card { padding: 1em; font-size: 1em; }
+  .neon-container { padding: 1em 0.5em; }
+  .neon-title { font-size: 1.1em; }
+  .neon-panel { padding: 1em 0.5em; }
 }
