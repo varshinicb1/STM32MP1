@@ -1,4 +1,4 @@
-import adafruit_dht
+import adafruit-circuitpython-dht
 import board
 
 def read_dht11(pin=None):
