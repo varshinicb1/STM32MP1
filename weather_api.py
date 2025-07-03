@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, render_template
-from sensor_read import read_dht11, read_mq135
+from sensor_read import get_sensor_data
 from ai_detection import detect_anomaly
 from adafruit_io_push import push_to_adafruit
 from logger import log_to_csv
@@ -12,17 +12,17 @@ def index():
 
 @app.route("/data")
 def data():
-    temp, hum = read_dht11()
-    gas = read_mq135()
+    temp, hum, gas, is_mock, source = get_sensor_data()
     anomaly = detect_anomaly(temp, gas)
-    # Log and push data
-    log_to_csv(temp, hum, gas, anomaly)
+    log_to_csv(temp, hum, gas, anomaly, source)
     push_to_adafruit(temp, hum, gas, anomaly)
     return jsonify({
         "temperature": temp,
         "humidity": hum,
         "gas": gas,
-        "anomaly": anomaly
+        "anomaly": anomaly,
+        "source": source,
+        "is_mock": is_mock
     })
 
 @app.route("/about")
