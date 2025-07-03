@@ -1,2 +1,5 @@
 flask
-Adafruit_DHT
+adafruit-circuitpython-dht
+adafruit-io
+tflite-runtime
+numpy
