@@ -1,3 +1,3 @@
-flask
-adafruit-io
 requests
+Adafruit-IO
+PyGObject
