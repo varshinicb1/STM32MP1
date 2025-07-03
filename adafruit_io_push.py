@@ -5,7 +5,6 @@ ADAFRUIT_IO_KEY = "aio_XXYH15mddEj83HFOTw6UZuue7zEF"
 
 aio = Client(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY)
 
-# Ensure feeds exist
 for feed_name in ["temperature", "humidity", "gas", "anomaly"]:
     try:
         aio.feeds(feed_name)
