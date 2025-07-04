@@ -19,6 +19,7 @@ class WeatherStation(Gtk.Window):
         self.grid.set_row_homogeneous(False)
         self.add(self.grid)
 
+        # Header
         self.title = self.make_label("🌐 STM32MP1 ENVIRONMENT MONITOR", 28, (0, 1, 1))
         self.subtitle = self.make_label("📊 Live Weather Feed - Kengeri, Bangalore", 18, (0.7, 0.9, 1.0))
         self.authors = self.make_label("By Varshini CB (1RV23EE056) &amp; Vedant (1RV23EE057)", 16, (0.6, 0.8, 0.9))
@@ -27,6 +28,7 @@ class WeatherStation(Gtk.Window):
         self.grid.attach(self.subtitle, 0, 1, 2, 1)
         self.grid.attach(self.authors, 0, 2, 2, 1)
 
+        # Sensor data
         self.temp = self.make_label("🌡 Temperature: -- °C", 24)
         self.hum = self.make_label("💧 Humidity: -- %", 24)
         self.aqi = self.make_label("🧪 AQI (PM2.5): -- ppm", 24)
@@ -38,10 +40,12 @@ class WeatherStation(Gtk.Window):
         for i, lbl in enumerate(labels):
             self.grid.attach(lbl, 0, i + 3, 2, 1)
 
+        # Exit
         exit_btn = Gtk.Button(label="❌ Exit")
         exit_btn.connect("clicked", Gtk.main_quit)
         self.grid.attach(exit_btn, 0, 10, 2, 1)
 
+        # Start data update thread
         self.updater = threading.Thread(target=self.update_loop)
         self.updater.daemon = True
         self.updater.start()
@@ -56,14 +60,15 @@ class WeatherStation(Gtk.Window):
 
     def fetch_data(self):
         try:
-            r1 = requests.get("https://api.open-meteo.com/v1/forecast?latitude=12.91&longitude=77.49&current_weather=true")
-            temp = r1.json()["current_weather"]["temperature"]
-            humidity = random.uniform(52, 55)
-            aqi = random.randint(30, 80)
-            co2 = round(random.uniform(0.035, 0.045), 3)
-            light = random.randint(200, 900)
+            response = requests.get("https://api.open-meteo.com/v1/forecast?latitude=12.91&longitude=77.49&current_weather=true")
+            temp = response.json()["current_weather"]["temperature"]
+            humidity = random.uniform(52, 55)  # simulated
+            aqi = random.randint(30, 80)       # simulated
+            co2 = round(random.uniform(0.035, 0.045), 3)  # simulated
+            light = random.randint(200, 900)   # simulated
             return temp, humidity, aqi, co2, light
         except:
+            # fallback simulation
             temp = random.uniform(25.0, 28.0)
             humidity = random.uniform(52.0, 55.0)
             aqi = random.randint(50, 80)
