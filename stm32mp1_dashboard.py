@@ -6,8 +6,8 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GLib
 
 class WeatherStation(Gtk.Window):
-    def _init_(self):
-        Gtk.Window._init_(self, title="STM32MP1 Weather Station")
+    def __init__(self):
+        Gtk.Window.__init__(self, title="STM32MP1 Weather Station")
         self.set_default_size(800, 480)
         self.fullscreen()
         self.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0.05, 0.05, 0.05, 1))
@@ -84,7 +84,7 @@ class WeatherStation(Gtk.Window):
                           Gdk.RGBA(1, 0, 0, 1) if "ALERT" in status else Gdk.RGBA(0, 1, 0, 1))
             time.sleep(3)
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     win = WeatherStation()
     win.connect("destroy", Gtk.main_quit)
     win.show_all()
