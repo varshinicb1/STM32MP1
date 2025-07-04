@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
-import gi, threading, time, requests, random
+import gi, threading, time, requests, random, os, sys
 from datetime import datetime
+
+if not os.environ.get("DISPLAY"):
+    print("[ERROR] No DISPLAY found. Please run this on STM32MP1 GUI desktop.")
+    sys.exit(1)
 
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GLib
@@ -10,17 +14,20 @@ class WeatherStation(Gtk.Window):
         Gtk.Window.__init__(self, title="STM32MP1 Weather Station")
         self.set_default_size(800, 480)
         self.fullscreen()
-        self.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0.05, 0.05, 0.05, 1))
+
+        # Background color fallback for modern GTK
+        rgba = Gdk.RGBA(0.05, 0.05, 0.05, 1)
+        self.override_background_color(Gtk.StateFlags.NORMAL, rgba)
 
         self.grid = Gtk.Grid(column_spacing=30, row_spacing=20, margin_top=20, margin_bottom=20, margin_start=30, margin_end=30)
         self.grid.set_column_homogeneous(True)
         self.grid.set_row_homogeneous(False)
         self.add(self.grid)
 
-        # Title
+        # Title and authors (fixed markup issue by escaping ampersand)
         self.title = self.make_label("🌐 STM32MP1 ENVIRONMENT MONITOR", 28, (0, 1, 1))
         self.subtitle = self.make_label("📊 Live Weather Feed - Kengeri, Bangalore", 18, (0.7, 0.9, 1.0))
-        self.authors = self.make_label("By Varshini CB (1RV23EE056) & Vedant (1RV23EE057)", 16, (0.6, 0.8, 0.9))
+        self.authors = self.make_label("By Varshini CB (1RV23EE056) &amp; Vedant (1RV23EE057)", 16, (0.6, 0.8, 0.9))
 
         self.grid.attach(self.title, 0, 0, 2, 1)
         self.grid.attach(self.subtitle, 0, 1, 2, 1)
@@ -38,7 +45,6 @@ class WeatherStation(Gtk.Window):
         for i, lbl in enumerate(labels):
             self.grid.attach(lbl, 0, i + 3, 2, 1)
 
-        # Exit
         exit_btn = Gtk.Button(label="❌ Exit")
         exit_btn.connect("clicked", Gtk.main_quit)
         self.grid.attach(exit_btn, 0, 10, 2, 1)
@@ -48,28 +54,23 @@ class WeatherStation(Gtk.Window):
         self.updater.start()
 
     def make_label(self, text, size=20, rgb=(1, 1, 1)):
-        lbl = Gtk.Label(label=text)
-        lbl.override_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(*rgb, 1))
-        lbl.set_xalign(0.0)
-        lbl.set_margin_bottom(5)
-        lbl.set_markup(f"<span font='Monospace {size}'>{text}</span>")
-        return lbl
+        label = Gtk.Label(label="")
+        label.set_xalign(0.0)
+        label.set_margin_bottom(5)
+        label.override_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(*rgb, 1))
+        label.set_markup(f"<span font='Monospace {size}'>{text}</span>")
+        return label
 
     def fetch_data(self):
         try:
-            # Open-Meteo for temperature and humidity (latitude, longitude for Kengeri)
             r1 = requests.get("https://api.open-meteo.com/v1/forecast?latitude=12.91&longitude=77.49&current_weather=true")
             temp = r1.json()["current_weather"]["temperature"]
-
-            # Simulated since humidity + gas APIs are inconsistent/free tier limited
             humidity = random.uniform(52, 55)
-            aqi = random.randint(30, 80)           # ppm simulated AQI (PM2.5)
-            co2 = round(random.uniform(0.035, 0.045), 3)  # percentage CO₂ ~350-450 ppm
-            light = random.randint(200, 900)       # simulated LDR
-
+            aqi = random.randint(30, 80)
+            co2 = round(random.uniform(0.035, 0.045), 3)
+            light = random.randint(200, 900)
             return temp, humidity, aqi, co2, light
         except:
-            # fallback simulated values
             temp = random.uniform(25.0, 28.0)
             humidity = random.uniform(52.0, 55.0)
             aqi = random.randint(50, 80)
@@ -80,7 +81,6 @@ class WeatherStation(Gtk.Window):
     def update_loop(self):
         while True:
             temp, hum, aqi, co2, light = self.fetch_data()
-
             GLib.idle_add(self.temp.set_markup, f"<span font='Monospace 24'>🌡 Temperature: {temp:.1f} °C</span>")
             GLib.idle_add(self.hum.set_markup, f"<span font='Monospace 24'>💧 Humidity: {hum:.1f} %</span>")
             GLib.idle_add(self.aqi.set_markup, f"<span font='Monospace 24'>🧪 AQI (PM2.5): {aqi} ppm</span>")
