@@ -19,28 +19,30 @@ class WeatherStation(Gtk.Window):
         self.add(self.grid)
 
         # Section Title
-        self.title = self.make_label("🌦 STM32MP1 ENVIRONMENT MONITOR", 28, (0, 1, 1))
+        self.title = self.make_label("STM32MP1 ENVIRONMENT MONITOR", 28, (0, 1, 1))
         self.grid.attach(self.title, 0, 0, 2, 1)
 
         # Sensor data widgets
-        self.temp = self.make_label("🌡 Temperature: -- °C", 24)
-        self.hum = self.make_label("💧 Humidity: -- %", 24)
-        self.gas = self.make_label("🧪 Air Quality: Medium", 24)
-        self.status = self.make_label("✔ System Status: Initializing...", 26, (1, 1, 0))
+        self.temp = self.make_label("Temperature: -- °C", 24)
+        self.hum = self.make_label("Humidity: -- %", 24)
+        self.gas = self.make_label("Air Quality: Medium", 24)
+        self.ldr = self.make_label("Light Intensity: -- lx", 24)
+        self.status = self.make_label("System Status: Initializing...", 26, (1, 1, 0))
 
-        labels = [self.temp, self.hum, self.gas, self.status]
+        labels = [self.temp, self.hum, self.gas, self.ldr, self.status]
         for i, lbl in enumerate(labels):
             self.grid.attach(lbl, 0, i + 1, 2, 1)
 
         # Exit button
-        exit_btn = Gtk.Button(label="❌ Exit")
+        exit_btn = Gtk.Button(label="Exit")
         exit_btn.connect("clicked", Gtk.main_quit)
-        self.grid.attach(exit_btn, 0, 6, 2, 1)
+        self.grid.attach(exit_btn, 0, 7, 2, 1)
 
         # Start data simulation
         self.temp_val = 30.0
         self.hum_val = 50.0
         self.gas_val = 500
+        self.ldr_val = 300
 
         self.updater = threading.Thread(target=self.update_loop)
         self.updater.daemon = True
@@ -59,21 +61,24 @@ class WeatherStation(Gtk.Window):
             self.temp_val += random.uniform(-0.3, 0.3)
             self.hum_val += random.uniform(-0.5, 0.5)
             self.gas_val += random.randint(-10, 10)
+            self.ldr_val += random.randint(-15, 15)
 
             self.temp_val = max(20, min(45, self.temp_val))
             self.hum_val = max(30, min(90, self.hum_val))
             self.gas_val = max(300, min(1000, self.gas_val))
+            self.ldr_val = max(0, min(1023, self.ldr_val))
 
-            status = "⚠ ALERT: High Temp/Gas" if self.gas_val > 900 or self.temp_val > 40 else "✔ System Stable"
+            status = "ALERT: High Temp/Gas" if self.gas_val > 900 or self.temp_val > 40 else "System Stable"
             air_quality = "Good" if self.gas_val < 400 else "Medium" if self.gas_val < 800 else "Poor"
-            self.history.append((datetime.now(), self.temp_val, self.hum_val, self.gas_val))
+            self.history.append((datetime.now(), self.temp_val, self.hum_val, self.gas_val, self.ldr_val))
             if len(self.history) > 50:
                 self.history.pop(0)
 
             # Update GUI
-            GLib.idle_add(self.temp.set_markup, f"<span font='Monospace 24'>🌡 Temperature: {self.temp_val:.1f} °C</span>")
-            GLib.idle_add(self.hum.set_markup, f"<span font='Monospace 24'>💧 Humidity: {self.hum_val:.1f} %</span>")
-            GLib.idle_add(self.gas.set_markup, f"<span font='Monospace 24'>🧪 Air Quality: {air_quality}</span>")
+            GLib.idle_add(self.temp.set_markup, f"<span font='Monospace 24'>Temperature: {self.temp_val:.1f} °C</span>")
+            GLib.idle_add(self.hum.set_markup, f"<span font='Monospace 24'>Humidity: {self.hum_val:.1f} %</span>")
+            GLib.idle_add(self.gas.set_markup, f"<span font='Monospace 24'>Air Quality: {air_quality}</span>")
+            GLib.idle_add(self.ldr.set_markup, f"<span font='Monospace 24'>Light Intensity: {self.ldr_val} lx</span>")
             GLib.idle_add(self.status.set_markup, f"<span font='Monospace 26'>{status}</span>")
             GLib.idle_add(self.status.override_color, Gtk.StateFlags.NORMAL,
                           Gdk.RGBA(1, 0, 0, 1) if "ALERT" in status else Gdk.RGBA(0, 1, 0, 1))
